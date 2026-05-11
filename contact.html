@@ -102,6 +102,8 @@
             <h3>Stuur een bericht</h3>
             <p style="color: var(--color-text-soft); margin-bottom: 1.5rem;">Vul het formulier in en Janneke neemt zo snel mogelijk contact met u op.</p>
 
+            <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
+
             <div class="form-group">
               <label for="naam" class="form-label">Naam <span class="required" aria-hidden="true">*</span></label>
               <input type="text" id="naam" name="naam" class="form-input" required autocomplete="name" aria-required="true">
@@ -135,6 +137,8 @@
             </div>
 
             <button type="submit" class="btn btn-primary btn-large btn-arrow" style="width: 100%;">Verstuur bericht</button>
+
+            <div id="form-status" class="form-status" role="status" aria-live="polite" hidden></div>
 
             <p class="form-note">
               Liever bellen? Dat kan! Als Janneke even niet op kan nemen, spreek dan uw naam en vraag in — zij belt u zo snel mogelijk terug.

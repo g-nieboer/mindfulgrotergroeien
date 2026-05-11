@@ -203,38 +203,96 @@
     document.querySelectorAll('.fade-in').forEach((el) => el.classList.add('visible'));
   }
 
-  /* ---- Contact form: basic validation & mailto fallback ---- */
+  /* ---- Contact form: validation & Formsubmit AJAX submission ---- */
   const contactForm = document.querySelector('#contact-form');
   if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    const statusEl = document.getElementById('form-status');
+    const submitBtn = contactForm.querySelector('button[type="submit"]');
+    const submitBtnDefaultText = submitBtn ? submitBtn.textContent : '';
+    const FORMSUBMIT_ENDPOINT = 'https://formsubmit.co/ajax/0e439ade1d645b9c04dbeb08c9957ec3';
+
+    function setStatus(kind, message) {
+      if (!statusEl) return;
+      statusEl.textContent = message;
+      statusEl.className = 'form-status form-status-' + kind;
+      statusEl.hidden = false;
+    }
+    function clearStatus() {
+      if (!statusEl) return;
+      statusEl.hidden = true;
+      statusEl.textContent = '';
+      statusEl.className = 'form-status';
+    }
+
+    contactForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      clearStatus();
+
       const data = new FormData(contactForm);
       const name = (data.get('naam') || '').toString().trim();
       const email = (data.get('email') || '').toString().trim();
       const phone = (data.get('telefoon') || '').toString().trim();
       const subject = (data.get('voor-wie') || '').toString().trim();
       const message = (data.get('bericht') || '').toString().trim();
+      const honey = (data.get('_honey') || '').toString();
 
       if (!name || !email || !message) {
-        alert('Vul alstublieft uw naam, e-mailadres en bericht in.');
+        setStatus('error', 'Vul alstublieft uw naam, e-mailadres en bericht in.');
         return;
       }
-
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        alert('Vul een geldig e-mailadres in.');
+        setStatus('error', 'Vul een geldig e-mailadres in.');
+        return;
+      }
+      if (honey) {
+        setStatus('success', 'Bedankt, uw bericht is verstuurd.');
+        contactForm.reset();
         return;
       }
 
-      const body =
-        `Naam: ${name}%0D%0A` +
-        `E-mail: ${email}%0D%0A` +
-        `Telefoon: ${phone}%0D%0A` +
-        `Voor wie: ${subject}%0D%0A%0D%0A` +
-        `Bericht:%0D%0A${encodeURIComponent(message)}`;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.setAttribute('aria-busy', 'true');
+        submitBtn.textContent = 'Bezig met versturen...';
+      }
 
-      const mailto = `mailto:mindfulgrotergroeien@gmail.com?subject=${encodeURIComponent('Contactaanvraag van ' + name)}&body=${body}`;
-      window.location.href = mailto;
+      try {
+        const res = await fetch(FORMSUBMIT_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            Naam: name,
+            'E-mail': email,
+            Telefoon: phone || '(niet opgegeven)',
+            'Voor wie': subject || '(niet opgegeven)',
+            Bericht: message,
+            _subject: 'Contactaanvraag van ' + name,
+            _template: 'table',
+            _captcha: 'false',
+            _replyto: email,
+          }),
+        });
+        const json = await res.json().catch(() => ({}));
+        const ok = res.ok && (json.success === 'true' || json.success === true);
+        if (ok) {
+          setStatus('success', 'Bedankt! Uw bericht is verstuurd. Janneke neemt zo snel mogelijk contact met u op.');
+          contactForm.reset();
+        } else {
+          throw new Error((json && json.message) || ('HTTP ' + res.status));
+        }
+      } catch (err) {
+        setStatus('error', 'Er ging iets mis bij het versturen. Probeer het opnieuw of mail rechtstreeks naar mindfulgrotergroeien@gmail.com.');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.removeAttribute('aria-busy');
+          submitBtn.textContent = submitBtnDefaultText;
+        }
+      }
     });
   }
 

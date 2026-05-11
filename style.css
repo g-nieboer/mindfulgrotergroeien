@@ -1538,6 +1538,26 @@ select:focus-visible {
   font-style: italic;
 }
 
+.form-status {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  border: 1px solid transparent;
+}
+.form-status[hidden] { display: none; }
+.form-status-success {
+  background: #e7f1d9;
+  color: var(--color-primary-dark);
+  border-color: #c4d9a3;
+}
+.form-status-error {
+  background: #fbeaea;
+  color: #8b1f1f;
+  border-color: #f1c2c2;
+}
+
 /* ---- Animations ---- */
 .fade-in {
   opacity: 0;
